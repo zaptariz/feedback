@@ -1,21 +1,27 @@
+const { required } = require('joi')
 const mongoose = require('mongoose')
 
 const feedbackSchema = mongoose.Schema({
+
+    from: {
+        type: mongoose.Schema.Types.Object,
+        ref:'user',
+        required: true
+    },
+    to: {
+        type: mongoose.Schema.Types.Object,
+        ref:'user',
+        required: true
+    },
     feedback: {
-        from: String,
-        to: {
-            type: String,
-            required: true
-        },
-        content: {
-            type: String,
-            required: true
-        },
-        feedback_posted_time: {
-            type: Date,
-            default: Date.now()
-        }
+        type: String,
+        required: true
+    },
+    feedback_posted_time: {
+        type: Date,
+        default: Date.now()
     }
+
 })
 
 const model = new mongoose.model('feedback', feedbackSchema)

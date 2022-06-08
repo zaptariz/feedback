@@ -1,4 +1,3 @@
-const { string } = require('joi')
 const mongoose = require('mongoose')
 
 const userModelSchema = new mongoose.Schema({
@@ -30,7 +29,6 @@ const userModelSchema = new mongoose.Schema({
     },
     password:{
         type:String,
-        required: true
     },
     // role 1 is developer
     role: {
@@ -39,5 +37,7 @@ const userModelSchema = new mongoose.Schema({
     }
 })
 
-const model = new mongoose.model('user', userModelSchema)
-exports.usermodel = model
+const usermodel = new mongoose.model('user', userModelSchema)
+module.exports = usermodel
+
+///.select('to feedback').populate({path:to})//

@@ -1,82 +1,58 @@
 //required modules and packages
-const router = require('express').Router();
-const {adds} = require('../models/AddsModel');
+const usermodel = require('../model/userModel')
+const { feedback } = require('../model/feedbackModel')
 
+//feedback stuff
 
-//to create add
-const createadds = async (req, res) => {
+exports.feedback = async (req, res) => {
     try {
-        
-        let request = req.body
-        let payload = {
-            title: request.title ? request.title : "",
-            content: request.content,
-            starttime: request.starttime,
-            endtime: request.endtime
+        const check_user_is_exist = await usermodel.findOne({ id: req.body.to })
+        if (!check_user_is_exist) {
+            console.log(" address of the receiver is not a registered user ")
+            res.json("address of the receiver is not a registered user ")
         }
-        
-        await new adds(payload).save()
-        return res.status(200).send('Add created successfully')
+        else {
+            //save the feedback
+            const feedback_payload = new feedback({
+                from: req.body.from,
+                to: req.body.to,
+                feedback: req.body.feedback
+            })
+            await feedback(feedback_payload).save()
+            console.log(" payload: ", feedback_payload)
+            // let response = await usermodel.({ userEmail: to, feedback })
+            res.status(200).send({
+                status: " SUCCESS",
+                response: `your feedback about ${check_user_is_exist.userName} is posted successfully`
+            })
+        }
+    } catch (error) {
+        console.log("error response : ", error.message)
+        return res.status(401).send({
+            status: 'failed',
+            response: error.message
+        })
     }
-    catch (error) {
+}
+
+exports.viewFeedback = async (req, res) => {
+    try {
+        let feedbackList = []
+        if (req.params.id) {
+            console.log("req.params.id :", req.params.id)
+            const view = await feedback.find({ to: req.params.id })
+            console.log("View:", view)
+            let i = 0;
+            let find_user = await usermodel.findOne({ _id: req.params.id })
+            console.log("find_user", find_user)
+            while (i < view.length) {
+                feedbackList.push(view[i].feedback)
+                i++;
+            }
+            res.status(200).send({ DeveloperName: find_user.userName, feedback_about_the_deloper: feedbackList })
+            // console.log(" view : ",view)
+        }
+    } catch (error) {
         console.log(error.message)
-        return res.status(400).json(error.message)
     }
-}
-//to show the adds
-const showAdd = async (req, res) => {
-    try {
-        let date = new Date();
-        let advertisements = await adds.find({
-            //aggregation were used for checking the adds times
-            'starttime': { $lte: date },
-            'endtime': { $gte: date },
-            is_active: true
-        });
-        //to check there 'advertisements' is empty or not
-        if (advertisements.length == 0) {
-            return res.status(200).json([{ title: 'There is no ads, Contact to show your ad here' }])
-        }
-        return res.status(200).json(advertisements)
-    }
-    catch (error) {
-        return res.status(200).send(error.message)
-    }
-}
-//Update the exisiting adds using the _id
-const updateAdd = async (req, res) => {
-    try {
-        let params = req.params.id
-        let payload = req.body
-        console.log(params, " ", payload)
-        let check_data = await adds.findOneAndUpdate({ _id: params }, payload)
-        check_data+= JSON.stringify(check_data)
-        if(check_data.length != 0)
-            return res.status(200).json('update successfully')
-        else 
-            res.status(401).send('There is no add in the given ID')
-    } catch (error) {
-        return res.status(400).send(error.message)
-    }
-}
-//delete the add 
-const deleteAdd = async (req, res) => {
-    try {
-        if(req.body.title){
-        let response = await adds.deleteOne({title:req.body.title})
-        if(response.deletedCount == 0){
-            res.status(404).send('There is no add in the name ')
-        }
-        else res.status(200).send(' add deleted successfully ')}
-    } catch (error) {
-        return res.send(error.message).status(400)
-    }
-}
-
-//this is another method of export the modules
-module.exports = {
-    createadds,
-    showAdd,
-    updateAdd,
-    deleteAdd
 }

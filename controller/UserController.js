@@ -1,10 +1,12 @@
 //required Models
-const router = require('express').Router()
-const bcrypt = require ('bcrypt')
+const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const { usermodel } = require('../model/userModel');
+const usermodel = require('../model/userModel');
 const { usertoken } = require('../model/JwtToken');
 const format = require('../middleware/fileFormatHelper')
+const password_generator = require('generate-password');
+const sendOTPVerification = require('./otpSender')
+const { number } = require('joi');
 
 /*********************************
  * User registration.
@@ -20,36 +22,58 @@ const file_format = format.fileformat
 
 exports.signup = async (req, res) => {
     try {
+        console.log(" req.body : ", req.body.userEmail)
         //Check the user is exists
-        let email_check = await usermodel.findOne({
-            email_id: req.body.email_id
-        })
-        
-        if (!email_check) {
-        // Encrypt the password
-        req.body.password = await bcrypt.hash(req.body.password, 10)
-        // console.log(" my n ")
-        const request = req.body
-        let payload = new usermodel({
-            userName: req.body.userName,
-            password: req.body.password,
-            userEmail: req.body.userEmail,
-            role: req.body.role,
-            profilePhoto: {
-                fileName: req.file.originalname,
-                fileType: req.file.mimetype,
-                fileSize: file_format(req.file.size, 2)
-            }
-        })
-            //insert to DB
-            const response = await new usermodel(payload).save()
-            return res.status(200).json(response)
-        } else res.status(400).send(' Email already registered ')
+        if (await usermodel.findOne({ userName: req.body.userName })) {
+            throw new Error(" userName is not available try with diffrent new userName")
+        }
+        else {
+            let password = password_generator.generate({
+                length: 10,
+                numbers: true
+            })
+            console.log('password :', password)
+            let email_check = await usermodel.findOne({ userEmail: req.body.userEmail })
+            if (!email_check) {
+                // Encrypt the password
+                password = await bcrypt.hash(password, 10)
+                // console.log(" my n ")
+                const request = req.body
+                let payload = new usermodel({
+                    userName: req.body.userName,
+                    userEmail: req.body.userEmail,
+                    role: req.body.role,
+                    profilePhoto: {
+                        fileName: req.file.originalname,
+                        fileType: req.file.mimetype,
+                        fileSize: file_format(req.file.size, 2)
+                    }
+                })
+                //insert to DB
+                const response = await new usermodel(payload).save()
+                await usermodel.findOneAndUpdate({ userEmail: req.body.email, password: password })
+                    .then((result) => {
+                        sendOTPVerification(result)
+                        return res.status(200).json({ "id": result._id })
+                    }).catch(err => {
+                        console.log("error  : ", err);
+                    })
+                return res.status(200).json({
+                    status: " SUCCESS",
+                    success_response: "your account created successfully ",
+                    user_name: response.userName,
+                    mailId: response.userEmail,
+                    password: "your password is send to your registered mailId."
+                })
+            } else res.status(400).send({
+                status: " FAILURE ",
+                error_response: "Email already registered"
+            })
+        }
     } catch (error) {
-        res.status(401).json({"error_mesage ": error.message})
+        res.status(401).json({ "error_mesage ": error.message })
     }
 }
-
 /********************************
  * User login.
  *
@@ -62,13 +86,13 @@ exports.signup = async (req, res) => {
 exports.signin = async (req, res) => {
     try {
         let email_check = await usermodel.findOne({ userEmail: req.body.userEmail })
-        let email_password = email_check.password
         if (email_check) {
+            let email_password = email_check.password
             //this password from request
             let pas_from_user = req.body.password
             // this password from DB
             let pas_fromm_db = email_password
-            //encrypt the password and save to psswd_vald for validation purpose
+            //Decrypt the password and save to psswd_vald for validation purpose
             let psswd_vald = await bcrypt.compare(pas_from_user, pas_fromm_db);
             if (psswd_vald) {
                 let payload = {
@@ -83,16 +107,21 @@ exports.signin = async (req, res) => {
                 }
                 //save the tokan in usertoken
                 await new usertoken(tokenPayload).save()
-                res.status(200).json(tokenPayload)
-                console.log("logged in Successfully ", tokenPayload.user)
+                res.status(200).json({
+                    status: " SUCCESS",
+                    success_response: `Logged in succesfully with ${email_check.userEmail}`,
+                    tokenPayload
+                })
             }
             else
-                return res.status(400).json('credential not matched')
+                return res.status(401).json('credential not matched')
         }
         else
-            return res.status(400).json('Email Id not found signup with your mail')
+            return res.status(401).json('Email Id not found signup with your mail')
     }
     catch (error) {
-        return res.status(404).send(error.message)
+        return res.status(404).send({
+            error_response: error.message
+        })
     }
 }

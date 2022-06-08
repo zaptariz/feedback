@@ -1,6 +1,6 @@
 
 const jwt = require('jsonwebtoken');
-const { usermodel } = require('../model/userModel');
+const usermodel  = require('../model/userModel');
 const { usertoken } = require('../model/JwtToken')
 const { model } = require('../model/userModel')
 
@@ -26,7 +26,7 @@ const adminAuth = async (req, res, next) => {
             throw new Error(" Token not found ")
         }
         else {
-            let find_mail = await usermodel.findOne({ userEmail: verify_token.userEmail })
+            let find_mail = await usermodel.findOne({ email: verify_token.userEmail })
             if (find_mail) {
                 if (find_mail.role == 1) {
                     req.user = find_mail
@@ -38,7 +38,7 @@ const adminAuth = async (req, res, next) => {
         }
     }
     catch (error) {
-        return res.status(401).json(error.message);
+        return res.status(401).json({"error_response  ": error.message});
     }
 };
 
