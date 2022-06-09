@@ -13,6 +13,7 @@ const fileUploader = multer({ storage: uploader.fileStorage, fileFilter: uploade
 router.post('/register', fileUploader.single('profile_image'), user.signup)
 router.post('/login', (req, res) => {
     try {
+        console.log("jyjfjfjh")
         let { error } = joiValidation.login(req.body);
         if (error) {
             return res.status(400).send(messagFormat.validationFormat(error, 'Project', 400))
@@ -24,6 +25,5 @@ router.post('/login', (req, res) => {
 
 })
 router.delete('/logout', adminAuth, user.logout)
-router.patch('/update_details', user.update)
 
 module.exports = router

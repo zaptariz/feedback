@@ -4,9 +4,9 @@ const jwt = require('jsonwebtoken')
 const usermodel = require('../model/userModel');
 const { usertoken } = require('../model/JwtToken');
 const format = require('../middleware/fileFormatHelper')
-const password_generator = require('generate-password');
-const joiValidation = require('../helper/joiValidation')
+const { password_generator } = require('../helper/randoPassword');
 const messageFormat = require('../utils/messageFormat')
+const { StatusCodes } = require('http-status-codes')
 // const transporter = require('../helper/nodeMailer')
 
 require('dotenv').config()
@@ -26,20 +26,16 @@ const file_format = format.fileformat
 
 exports.signup = async (req, res) => {
     try {
-        // joi validation
-        const request = await joiValidation.registerSchema.validateAsync(req.body)
-
+        let request = req.body
         //Check the user is exists
         if (await usermodel.findOne({ userName: request.userName })) {
             throw new Error(" userName is not available try with diffrent new userName")
         }
         else {
-            //lets generate the random password 
-            let password = password_generator.generate({
-                length: 10,
-                numbers: true
-            })
-            let temp_password = password
+            //for save in the random password 
+            let password = password_generator
+            // for show to user
+            let temp_password = password_generator
             let email_check = await usermodel.findOne({ userEmail: request.userEmail })
             if (!email_check) {
                 // Encrypt the password
@@ -82,28 +78,37 @@ exports.signup = async (req, res) => {
                 // }).catch((err) => {
                 //     console.log("error  : ", err);
                 // })
-                return res.status(200).json({
+                let rawData = {
                     status: " SUCCESS",
                     success_response: "your account created successfully ",
                     user_name: response.userName,
-                    mailId: response.userEmail,
-                    password: `your password is : ${temp_password} is send to your registered mailId .`
-                })
+                    mailId: response.userEmail
+                }
+                return res.status(StatusCodes.OK).send(messageFormat.successFormat(
+                    rawData,
+                    'signup',
+                    StatusCodes.OK,
+                    `your password is : ${temp_password} is send to your registered mailId .`
+                ))
             } else res.status(400).send({
                 status: " FAILURE ",
                 error_response: "Email already registered"
             })
         }
     } catch (error) {
-        res.status(401).json({ "error_mesage ": error.message })
+        res.status(StatusCodes.BAD_REQUEST).send(messageFormat.errorMsgFormat(
+            error.message,
+            'register',
+            StatusCodes.BAD_REQUEST))
     }
 }
 /********************************
  * User login.
  *
- * @param {string}      email
- * @param {string}      password
- *
+ * @param   {string}      email
+ * @param   {string}      password
+ * @header  {string}      jwtToken
+ * 
  * @returns {function}
  ********************************/
 
@@ -134,54 +139,36 @@ exports.login = async (req, res) => {
                 }
                 //save the tokan in usertoken
                 await new usertoken(tokenPayload).save()
-                res.status(200).json(messageFormat.successFormat(tokenPayload, 'login', 200, `Logged in succesfully with ${email_check.userEmail}`))
+                res.status(StatusCodes.OK).send(messageFormat.successFormat(tokenPayload, 'login', StatusCodes.OK, `Logged in succesfully with ${email_check.userEmail}`))
             }
             else
-                return res.status(401).json('credential not matched')
+                return res.status(StatusCodes.UNAUTHORIZED).send(messageFormat.errorMsgFormat('credential not matched', 'login', StatusCodes.UNAUTHORIZED))
         }
         else
-            return res.status(401).json('Email Id not found signup with your mail')
+            return res.status(StatusCodes.NOT_FOUND).send(messageFormat.errorMsgFormat('Email Id not found signup with your mail', 'login', StatusCodes.NOT_FOUND))
     }
     catch (error) {
-        return res.status(400).send(messageFormat.errorMsgFormat(error.message, 'login', 400))
+        return res.status(StatusCodes.BAD_REQUEST).send(messageFormat.errorMsgFormat(error.message, 'login', StatusCodes.BAD_REQUEST))
     }
 }
+
+/********************************
+ * User logout
+ *
+ * @param   {string}      email
+ * @param   {string}      password
+ * @header  {string}      jwtToken
+ * 
+ * @returns {function}
+ ********************************/
 
 exports.logout = async (req, res) => {
     try {
+        //Delete the  Jwt token for log out
         let response = await usertoken.deleteMany({ token: req.headers.authorization })
-        res.status(200).send({ response: " logged out successfully" })
+        res.status(StatusCodes.OK).send(messageFormat.successFormat(response, 'logout', StatusCodes.OK, " logged out successfully"))
     }
     catch (error) {
-        return res.status(404).send({
-            error_response: error.message
-        })
+        return res.status(StatusCodes.BAD_REQUEST).send(messageFormat.errorMsgFormat(error.message, 'login', StatusCodes.BAD_REQUEST))
     }
 }
-
-exports.update = async (req, res) => {
-    try {
-        const request = await joiValidation.updateUserDetails.validateAsync(req.body)
-        if (request.profilePhoto) {
-            let response = await usermodel.findOneAndUpdate({ profilePhoto: request.profilePhoto, profilePhoto })
-            console.log(" request update  : ", response)
-        }
-        // else (request.profilePhoto){
-        //     let response = await usermodel.findOneAndUpdate({ profilePhoto: request.profilePhoto, profilePhoto })
-        //     console.log(" request update  : ", response)
-        // }
-    }
-    catch (error) {
-        return res.status(404).send({
-            error_response: error.message
-        })
-    }
-}
-
-
-
-/*router.use('/user', userRoute);
-router.use('/nft', nftRoute);
-router.use('/collection', collectionRoute);
-router.use('/project', projectRoute);
-router.use('/transaction'*/ 
