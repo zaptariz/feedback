@@ -1,33 +1,25 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
+const { config } = require('./configuration/config')
 require('dotenv').config()
-
-
 const application = express()
 application.use(express.json())
 application.use(cors())
-const router = express.Router()
-const userapi = require('./routes/userApi')
-const PORT = process.env.PORT
+const userApi = require('./routes/userApi')
+const feedBackApi = require('./routes/feedBackAPI')
+const router = require('./routes/index')
 const db = () => {
     try {
-        mongoose.connect('mongodb://localhost/feedback', (error, response) => {
-            console.log(" db connected with : http://" + response.host + ':' + response.port)
+        mongoose.connect(config.dbConnection + config.database, (error, response) => {
+            console.log(" db connected with : " + response.host + ':' + response.port)
+            application.listen(config.port)
+            console.log(` Node Server started...\n Server Running on PORT : ${config.port} `)
         })
     } catch (error) { console.log(error.message) }
 }
 db();
 
-const nodeserver = () => {
-    try {
-        application.listen(PORT, (err, data) => {
-            console.log(` Node Server started...\n Server Running on PORT : ${PORT} `)
-        })
-    } catch (error) {
-        console.log(error.message)
-    }
-}
-nodeserver()
-
-application.use('/user',userapi)
+application.use('/api/v1', (req, res, next) => {
+    next()
+}, router);

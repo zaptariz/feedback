@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const joi = require('joi')
 
 const userModelSchema = new mongoose.Schema({
     userName: {
@@ -27,9 +28,7 @@ const userModelSchema = new mongoose.Schema({
             default: Date.now()
         }
     },
-    password:{
-        type:String,
-    },
+    password: String,
     // role 1 is developer
     role: {
         type: Number,

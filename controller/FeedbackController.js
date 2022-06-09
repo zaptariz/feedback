@@ -1,12 +1,16 @@
 //required modules and packages
 const usermodel = require('../model/userModel')
 const { feedback } = require('../model/feedbackModel')
+const joiValidation = require('../helper/joiValidation')
+
 
 //feedback stuff
 
 exports.feedback = async (req, res) => {
     try {
-        const check_user_is_exist = await usermodel.findOne({ id: req.body.to })
+        const request = await joiValidation.userFeedback.validateAsync(req.body)
+        console.log(" request : ", request)
+        const check_user_is_exist = await usermodel.findOne({_id: request.to })
         if (!check_user_is_exist) {
             console.log(" address of the receiver is not a registered user ")
             res.json("address of the receiver is not a registered user ")
@@ -50,9 +54,26 @@ exports.viewFeedback = async (req, res) => {
                 i++;
             }
             res.status(200).send({ DeveloperName: find_user.userName, feedback_about_the_deloper: feedbackList })
-            // console.log(" view : ",view)
         }
     } catch (error) {
         console.log(error.message)
+        res.status(200).send({ error: error.message })
+    }
+}
+
+exports.allFeedback = async (req,res) =>{
+    try {
+        let response = await feedback.aggregate([{$project:{_id: 0, to: 1, feedback:1}}])
+        let i =0
+        while(i<response.length){
+            allFeedBack.push(response[i])
+            i++
+        }
+        res.status(200).send({allFeedBack})
+    } catch (error) {
+        res.status(401).send({
+            status: " Failure",
+            response: error.message
+        })
     }
 }
