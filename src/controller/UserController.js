@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken')
 const usermodel = require('../model/userModel');
 const { usertoken } = require('../model/JwtToken');
 const format = require('../middleware/fileFormatHelper')
-const { password_generator } = require('../helper/randoPassword');
+const password_generator  = require('../helper/randoPassword');
 const messageFormat = require('../utils/messageFormat')
 const { StatusCodes } = require('http-status-codes')
 // const transporter = require('../helper/nodeMailer')
@@ -33,14 +33,13 @@ exports.signup = async (req, res) => {
         }
         else {
             //for save in the random password 
-            let password = password_generator
+            let password = password_generator.password
             // for show to user
-            let temp_password = password_generator
+            let temp_password = password_generator.password
             let email_check = await usermodel.findOne({ userEmail: request.userEmail })
             if (!email_check) {
                 // Encrypt the password
                 password = await bcrypt.hash(password, 10)
-                // console.log(" my n ")
                 let payload = new usermodel({
                     password,
                     userName: request.userName,
@@ -52,13 +51,10 @@ exports.signup = async (req, res) => {
                         fileSize: file_format(req.file.size, 2)
                     }
                 })
-                // console.log(" payloda")
                 //insert to DB
                 const response = await new usermodel(payload).save()
-                // console.log("  request.userEmail ", request.userEmail)
                 await usermodel.findOneAndUpdate({ userEmail: payload.userEmail, password: password })
                 // .then((request) => {
-                //     console.log(" request : ", request)
                 //     const mailoption = {
                 //         from: process.env.SENDER,
                 //         to: request.userEmail,
@@ -68,7 +64,6 @@ exports.signup = async (req, res) => {
                 //     // Send mail stuff
                 //     transporter.sendMail(mailoption, (err, data) => {
                 //         if (err) {
-                //             console.log(err)
                 //             return res.status(401).json('Opps error occured')
                 //         } else {
                 //             return res.status(200).json(data)
@@ -76,7 +71,6 @@ exports.signup = async (req, res) => {
                 //     })
                 //     return res.status(200).json({ "id": request._id })
                 // }).catch((err) => {
-                //     console.log("error  : ", err);
                 // })
                 let rawData = {
                     status: " SUCCESS",
@@ -115,9 +109,7 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
     try {
         let request = req.body
-        console.log(" array : ", request)
         let email_check = await usermodel.findOne({ userEmail: request.userEmail })
-        console.log(email_check)
         if (email_check) {
             // let email_password = 
             //this password from request
@@ -132,7 +124,6 @@ exports.login = async (req, res) => {
                     email: email_check.userEmail
                 }
                 let token = jwt.sign(payload, "secret")
-                // console.log('payload : ',payload, token)
                 let tokenPayload = {
                     user: email_check._id,
                     token: token

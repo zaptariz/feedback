@@ -9,11 +9,9 @@ const messageFormat = require('../utils/messageFormat')
 
 exports.feedback = async (req, res) => {
     try {
-        const request = await joiValidation.userFeedback.validateAsync(req.body)
-        console.log(" request : ", request)
+        const request = req.body
         const check_user_is_exist = await usermodel.findOne({ _id: request.to })
         if (!check_user_is_exist) {
-            console.log(" address of the receiver is not a registered user ")
             return res.status(StatusCodes.NOT_FOUND).json(
                 messageFormat.errorMsgFormat("address of the receiver is not a registered user ,"),
                 'login',
@@ -36,7 +34,6 @@ exports.feedback = async (req, res) => {
                 ))
         }
     } catch (error) {
-        console.log("error response : ", error.message)
         return res.status(StatusCodes.BAD_REQUEST).send(
             messageFormat.errorMsgFormat(
                 error.message,
@@ -50,12 +47,9 @@ exports.viewFeedback = async (req, res) => {
     try {
         let feedbackList = []
         if (req.params.id) {
-            console.log("req.params.id :", req.params.id)
             const view = await feedback.find({ to: req.params.id })
-            console.log("View:", view)
             let i = 0;
             let find_user = await usermodel.findOne({ _id: req.params.id })
-            console.log("find_user", find_user)
             while (i < view.length) {
                 feedbackList.push(view[i].feedback)
                 i++;
@@ -68,10 +62,9 @@ exports.viewFeedback = async (req, res) => {
                 feedbackdetails.DeveloperName,
                 'viewfeedback',
                 StatusCodes.OK,
-                feedbackdetails.feedbackList))
+                { feedback: feedbackdetails.feedback_about_the_deloper }))
         }
     } catch (error) {
-        console.log(error.message)
         return res.status(StatusCodes.BAD_REQUEST).send(messageFormat.errorMsgFormat(
             error.message,
             'viewfeedback',
