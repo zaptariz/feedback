@@ -1,9 +1,12 @@
 const mongoose = require('mongoose')
 const express = require('express')
+const cors = require('cors')
 const {config} = require('./config')
 require('dotenv').config()
 
 const application = express()
+application.use(express.json())
+application.use(cors())
 
 exports.db = () => {
     try {

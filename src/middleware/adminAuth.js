@@ -1,8 +1,7 @@
 
 const jwt = require('jsonwebtoken');
-const usermodel  = require('../model/userModel');
+const userModel  = require('../model/userModel');
 const { usertoken } = require('../model/JwtToken')
-const { model } = require('../model/userModel')
 
 
 /*********************************
@@ -14,8 +13,6 @@ const { model } = require('../model/userModel')
  * 
  * @returns {function}
  * 
- * 
- * note  : Jwt for feature works
  *********************************/
 const adminAuth = async (req, res, next) => {
     try {
@@ -26,10 +23,10 @@ const adminAuth = async (req, res, next) => {
             throw new Error(" Token not found ")
         }
         else {
-            let find_mail = await usermodel.findOne({ email: verify_token.userEmail })
-            if (find_mail) {
-                if (find_mail.role == 1) {
-                    req.user = find_mail
+            let findEmailId = await userModel.findOne({ email: verify_token.userEmail })
+            if (findEmailId) {
+                if (findEmailId.role == 1) {
+                    req.user = findEmailId
                     next()
                 }
                 else throw new Error("Authentication failed, User is not a developer. Your request could not be authenticated.")

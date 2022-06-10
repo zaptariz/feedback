@@ -1,16 +1,14 @@
 //required modules and packages
 const usermodel = require('../model/userModel')
 const { feedback } = require('../model/feedbackModel')
-const joiValidation = require('../helper/joiValidation')
 const { StatusCodes } = require('http-status-codes')
 const messageFormat = require('../utils/messageFormat')
-
 //feedback stuff
 
-exports.feedback = async (req, res) => {
+exports.postThefeedback = async (req, res) => {
     try {
-        const request = req.body
-        const check_user_is_exist = await usermodel.findOne({ _id: request.to })
+        let request = req.body
+        let check_user_is_exist = await usermodel.findOne({ _id: request.to })
         if (!check_user_is_exist) {
             return res.status(StatusCodes.NOT_FOUND).json(
                 messageFormat.errorMsgFormat("address of the receiver is not a registered user ,"),
@@ -19,7 +17,7 @@ exports.feedback = async (req, res) => {
         }
         else {
             //save the feedback
-            const feedback_payload = new feedback({
+            let feedback_payload = new feedback({
                 from: req.body.from,
                 to: req.body.to,
                 feedback: req.body.feedback
@@ -43,11 +41,11 @@ exports.feedback = async (req, res) => {
     }
 }
 
-exports.viewFeedback = async (req, res) => {
+exports.viewFeedbackForParticularUser = async (req, res) => {
     try {
         let feedbackList = []
         if (req.params.id) {
-            const view = await feedback.find({ to: req.params.id })
+            let view = await feedback.find({ to: req.params.id })
             let i = 0;
             let find_user = await usermodel.findOne({ _id: req.params.id })
             while (i < view.length) {
@@ -72,24 +70,41 @@ exports.viewFeedback = async (req, res) => {
     }
 }
 
-exports.allFeedback = async (req, res) => {
+exports.viewAllTheFeedback = async (req, res) => {
     try {
         let response = await feedback.aggregate([{ $project: { _id: 0, to: 1, feedback: 1 } }])
-        // let i = 0
-        // while (i < response.length) {
-        //     allFeedBack.push(response[i])
-        //     i++
-        // }
         return res.status(StatusCodes.OK).send(messageFormat.successFormat(
             response,
-            'allFeedBack',
+            'viewAllTheFeedBack',
             StatusCodes.OK,
             "all the feedback about the developers"
         ))
     } catch (error) {
-        res.status(StatusCodes.BAD_REQUEST).send(messageFormat.errorMsgFormat(
+        return res.status(StatusCodes.BAD_REQUEST).send(messageFormat.errorMsgFormat(
             error.message,
-            'allFeedBack',
+            'viewAllTheFeedBack',
+            StatusCodes.BAD_REQUEST
+        ))
+    }
+}
+
+exports.getRandomUsers = async (req, res) => {
+    try {
+        let randomUserList = []
+        let randomUser = await usermodel.findRandom().limit(3).select('_id userName')
+        randomUser.forEach(response => {
+            randomUserList.push(response)
+        });
+        return res.status(StatusCodes.OK).send(messageFormat.successFormat(
+            { response: randomUserList },
+            'getRandomUsers',
+            StatusCodes.OK,
+            "random users from developers"
+        ))
+    } catch (error) {
+        return res.status(StatusCodes.BAD_REQUEST).send(messageFormat.errorMsgFormat(
+            error.message,
+            'getRandomUsers',
             StatusCodes.BAD_REQUEST
         ))
     }

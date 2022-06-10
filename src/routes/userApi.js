@@ -1,9 +1,8 @@
 const express = require('express')
 const multer = require('multer')
 const uploader = require('../middleware/fileUpload')
-const user = require('../controller/UserController')
+const userController = require('../controller/UserController')
 const adminAuth = require('../middleware/adminAuth')
-const fdBack = require('../controller/FeedbackController')
 const joiValidation = require('../helper/joiValidation')
 const router = express.Router()
 const messagFormat = require('../utils/messageFormat')
@@ -19,7 +18,7 @@ router.post('/register', fileUploader.single('profile_image'),  (req, res) => {
         if (error) {
             return res.status(StatusCodes.BAD_REQUEST).send(messagFormat.validationFormat(error, 'register', StatusCodes.BAD_REQUEST))
         }
-        return user.signup(req, res)
+        return userController.signup(req, res)
     } catch (error) {
         return res.send(messagFormat.errorMsgFormat(error.message, 'register'))
     }
@@ -31,7 +30,7 @@ router.post('/login', (req, res) => {
         if (error) {
             return res.status(StatusCodes.BAD_REQUEST).send(messagFormat.validationFormat(error, 'login', StatusCodes.BAD_REQUEST))
         }
-        return user.login(req,res)
+        return userController.login(req,res)
     } catch (error) {
         return res.send(messagFormat.errorMsgFormat(error.message, 'login',StatusCodes.BAD_REQUEST))
     }
@@ -39,7 +38,7 @@ router.post('/login', (req, res) => {
 })
 router.delete('/logout', adminAuth, (req, res) => {
     try {
-        return user.logout(req, res)
+        return userController.logout(req, res)
     } catch (error) {
         return res.send(messagFormat.errorMsgFormat(error.message, 'login'))
     }

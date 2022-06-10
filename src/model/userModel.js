@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const joi = require('joi')
+const random = require('mongoose-random')
 
 const userModelSchema = new mongoose.Schema({
     userName: {
@@ -35,7 +36,7 @@ const userModelSchema = new mongoose.Schema({
         required: true
     }
 })
-
+userModelSchema.plugin(random)
 const usermodel = new mongoose.model('user', userModelSchema)
 module.exports = usermodel
 

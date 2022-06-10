@@ -1,7 +1,8 @@
 const express = require('express')
-const mongoose = require('mongoose')
 const cors = require('cors')
+const mongoose = require('mongoose')
 const { config } = require('./src/configuration/config')
+// const dbConnection = require('./src/configuration/dbConfig')
 require('dotenv').config()
 const application = express()
 application.use(express.json())
@@ -16,6 +17,8 @@ const db = () => {
         })
     } catch (error) { console.log(error.message) }
 }
+//invoke the DB
+// dbConnection.db()
 db();
 
 application.use('/api/v1', (req, res, next) => {

@@ -4,9 +4,10 @@ const jwt = require('jsonwebtoken')
 const usermodel = require('../model/userModel');
 const { usertoken } = require('../model/JwtToken');
 const format = require('../middleware/fileFormat')
-const password_generator  = require('../helper/randoPassword');
+const password_generator = require('../helper/randoPassword');
 const messageFormat = require('../utils/messageFormat')
 const { StatusCodes } = require('http-status-codes')
+const { configuration } = require('../configuration/config')
 // const transporter = require('../helper/nodeMailer')
 
 require('dotenv').config()
@@ -27,8 +28,14 @@ const file_format = format.fileformat
 exports.signup = async (req, res) => {
     try {
         let request = req.body
+        // check the role and make sure the register is admin
+        let admin = req.body.admiRole
+        console.log("configuration.adminRole  : ", configuration.adminRole)
+        if (configuration.adminRole != req.body.adminrole) {
+            throw new Error(' your not a admin, Admin can only create your account ')
+        }
         //Check the user is exists
-        if (await usermodel.findOne({ userName: request.userName })) {
+        else if (await usermodel.findOne({ userName: request.userName })) {
             throw new Error(" userName is not available try with diffrent new userName")
         }
         else {
@@ -52,7 +59,7 @@ exports.signup = async (req, res) => {
                     }
                 })
                 //insert to DB
-                const response = await new usermodel(payload).save()
+                let response = await new usermodel(payload).save()
                 await usermodel.findOneAndUpdate({ userEmail: payload.userEmail, password: password })
                 // .then((request) => {
                 //     const mailoption = {
@@ -84,13 +91,15 @@ exports.signup = async (req, res) => {
                     StatusCodes.OK,
                     `your password is : ${temp_password} is send to your registered mailId .`
                 ))
-            } else res.status(400).send({
-                status: " FAILURE ",
-                error_response: "Email already registered"
-            })
+            } else return res.status(StatusCodes.BAD_REQUEST).send(messageFormat.errorMsgFormat(
+                " Given EmailId was registered already",
+                'signup',
+                StatusCodes.BAD_REQUEST,
+
+            ))
         }
     } catch (error) {
-        res.status(StatusCodes.BAD_REQUEST).send(messageFormat.errorMsgFormat(
+        return res.status(StatusCodes.BAD_REQUEST).send(messageFormat.errorMsgFormat(
             error.message,
             'register',
             StatusCodes.BAD_REQUEST))

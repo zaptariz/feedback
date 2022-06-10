@@ -1,7 +1,6 @@
 const mongoose = require('mongoose')
-
+const random = require('mongoose-random')
 const feedbackSchema = mongoose.Schema({
-
     from: {
         type: mongoose.Schema.Types.Object,
         ref:'user',
@@ -22,6 +21,6 @@ const feedbackSchema = mongoose.Schema({
     }
 
 })
-
+feedbackSchema.plugin(random)
 const model = new mongoose.model('feedback', feedbackSchema)
 exports.feedback = model
