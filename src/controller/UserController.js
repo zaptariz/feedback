@@ -20,7 +20,6 @@ require('dotenv').config()
  * @param {string}      email
  * @param {string}      password
  * @param {number}      role ( user role)
- * @param {number}      adminRole 
  * @returns {function}
  *********************************/
 const file_format = format.fileformat
@@ -112,7 +111,6 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
     try {
         let request = req.body
-        let adminRole = request.adminrole
         let email_check = await usermodel.findOne({ userEmail: request.userEmail })
         if (email_check) {
             // let email_password = 

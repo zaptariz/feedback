@@ -10,7 +10,6 @@ exports.registerSchema = (req) => {
         userName: Joi.string().alphanum().min(3).max(30).required(),
         userEmail: Joi.string().email(({ minDomainSegments: 2, tlds: { allow: ['com', 'io'] } })).lowercase().required(),
         role: Joi.number().max(1),
-        adminrole: Joi.number().required()
     })
     return schema.validate(req, { abortEarly: false });
 }
