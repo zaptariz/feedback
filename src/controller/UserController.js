@@ -7,7 +7,6 @@ const format = require('../middleware/fileFormat')
 const password_generator = require('../helper/randoPassword');
 const messageFormat = require('../utils/messageFormat')
 const { StatusCodes } = require('http-status-codes')
-const { configuration } = require('../configuration/config')
 // const transporter = require('../helper/nodeMailer')
 
 require('dotenv').config()
@@ -20,7 +19,8 @@ require('dotenv').config()
  * @param {string}      lastName
  * @param {string}      email
  * @param {string}      password
- * 
+ * @param {number}      role ( user role)
+ * @param {number}      adminRole 
  * @returns {function}
  *********************************/
 const file_format = format.fileformat
@@ -28,14 +28,8 @@ const file_format = format.fileformat
 exports.signup = async (req, res) => {
     try {
         let request = req.body
-        // check the role and make sure the register is admin
-        let admin = req.body.admiRole
-        console.log("configuration.adminRole  : ", configuration.adminRole)
-        if (configuration.adminRole != req.body.adminrole) {
-            throw new Error(' your not a admin, Admin can only create your account ')
-        }
         //Check the user is exists
-        else if (await usermodel.findOne({ userName: request.userName })) {
+        if (await usermodel.findOne({ userName: request.userName })) {
             throw new Error(" userName is not available try with diffrent new userName")
         }
         else {
@@ -118,6 +112,7 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
     try {
         let request = req.body
+        let adminRole = request.adminrole
         let email_check = await usermodel.findOne({ userEmail: request.userEmail })
         if (email_check) {
             // let email_password = 
@@ -166,7 +161,7 @@ exports.logout = async (req, res) => {
     try {
         //Delete the  Jwt token for log out
         let response = await usertoken.deleteMany({ token: req.headers.authorization })
-        res.status(StatusCodes.OK).send(messageFormat.successFormat(response, 'logout', StatusCodes.OK, " logged out successfully"))
+        res.status(StatusCodes.OK).send(messageFormat.successFormat(response, 'logout', StatusCodes.OK, " logged out successfully "))
     }
     catch (error) {
         return res.status(StatusCodes.BAD_REQUEST).send(messageFormat.errorMsgFormat(error.message, 'login', StatusCodes.BAD_REQUEST))

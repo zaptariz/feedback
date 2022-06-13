@@ -18,7 +18,7 @@ const token = mongoose.Schema({
 })
 
 //create a model
-const usertoken = new mongoose.model('usertoken', token)
+const model = new mongoose.model('usertoken', token)
 
 //export the model
-exports.usertoken = usertoken
+exports.usertoken = model

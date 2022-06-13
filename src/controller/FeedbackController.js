@@ -3,11 +3,14 @@ const usermodel = require('../model/userModel')
 const { feedback } = require('../model/feedbackModel')
 const { StatusCodes } = require('http-status-codes')
 const messageFormat = require('../utils/messageFormat')
+const { usertoken } = require("../model/JwtToken")
+const jwt = require("jsonwebtoken")
 //feedback stuff
 
 exports.postThefeedback = async (req, res) => {
     try {
         let request = req.body
+        let feedbackFrom = await jwt.verify(req.headers.authorization, "secret")
         let check_user_is_exist = await usermodel.findOne({ _id: request.to })
         if (!check_user_is_exist) {
             return res.status(StatusCodes.NOT_FOUND).json(
@@ -17,8 +20,9 @@ exports.postThefeedback = async (req, res) => {
         }
         else {
             //save the feedback
+            console.log("feedbackFrom : ",feedbackFrom.id)
             let feedback_payload = new feedback({
-                from: req.body.from,
+                from: feedbackFrom.id,
                 to: req.body.to,
                 feedback: req.body.feedback
             })
@@ -90,10 +94,12 @@ exports.viewAllTheFeedback = async (req, res) => {
 
 exports.getRandomUsers = async (req, res) => {
     try {
+        let verify_token = await jwt.verify(req.headers.authorization, "secret")
         let randomUserList = []
         let randomUser = await usermodel.findRandom().limit(3).select('_id userName')
         randomUser.forEach(response => {
-            randomUserList.push(response)
+            if (verify_token.id != response.id)
+                randomUserList.push(response)
         });
         return res.status(StatusCodes.OK).send(messageFormat.successFormat(
             { response: randomUserList },

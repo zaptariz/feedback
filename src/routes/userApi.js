@@ -40,7 +40,7 @@ router.delete('/logout', adminAuth, (req, res) => {
     try {
         return userController.logout(req, res)
     } catch (error) {
-        return res.send(messagFormat.errorMsgFormat(error.message, 'login'))
+        return res.send(messagFormat.errorMsgFormat(error.message, 'logout'))
     }
 })
 

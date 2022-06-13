@@ -6,7 +6,7 @@ const messageFormat = require('../utils/messageFormat')
 
 const router = express.Router()
 
-router.post('/feedback', adminAuth, (req, res) => {
+router.post('/postfeedback', adminAuth, (req, res) => {
     try {
         let { error } = joiValidation.userFeedback(req.body);
         if (error) {
@@ -25,17 +25,9 @@ router.get('/feedback/:id', adminAuth, (req, res) => {
         return res.send(messageFormat.errorMsgFormat(error.message, 'Project'))
     }
 
-})     //id is a objectId of userModel MongoDB id (to address)
-router.get('/allfeedback', adminAuth, (req, res) => {
-    try {
-        return feedBackController.viewAllTheFeedback(req, res)
-    } catch (error) {
-        return res.send(messageFormat.errorMsgFormat(error.message, 'Project'))
-    }
-
 })
-// router.get('/allfeedback',adminAuth,fee.allFeedback)
-router.get('/getrandomuser',adminAuth, (req, res) => {
+
+router.get('/getrandomuser', adminAuth, (req, res) => {
     try {
         return feedBackController.getRandomUsers(req, res)
     } catch (error) {

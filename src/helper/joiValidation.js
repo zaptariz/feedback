@@ -25,28 +25,8 @@ exports.login = (req) => {
 
 exports.userFeedback = (req) => {
     let schema = Joi.object({
-        from: Joi.objectId().required(),
-        to: Joi.objectId().required(),
+        to: Joi.objectId().required(),  // id is a objectId of userModel MongoDB id (from address)
         feedback: Joi.string().min(10).max(500).required()
-    })
-    return schema.validate(req, { abortEarly: false });
-}
-
-// exports.updateUserDetails = (req) => {
-//     let schema = Joi.object({
-//         profilePhoto: Joi.object(),
-//         userName: Joi.string()
-//     })
-//     return schema.validate(req, { abortEarly: false });
-// }
-
-const randomUser = []
-
-exports.feedBackTheRandomUser = (req) => {
-    let schema = Joi.object({
-        from: Joi.objectId().required(),
-        to: Joi.objectId().required(),
-        feedback: Joi.string().min(30).max(500).required()
     })
     return schema.validate(req, { abortEarly: false });
 }
