@@ -1,3 +1,5 @@
+const { StatusCodes } = require("http-status-codes");
+
 /*************************************
 *  Message format for success response
 
@@ -6,7 +8,7 @@
 * @param { number }   code    ( http StatusCodes    )
 *
 ***************************************/
-exports.errorMsgFormat = (error, type = 'users', code = 400) => {
+exports.errorMsgFormat = (error, type = 'users', code = StatusCodes.BAD_REQUEST) => {
     return {
         "code": code,
         "errors": true,
@@ -30,7 +32,7 @@ exports.validationFormat = (error) => {
     } else {
         errors = error;
     }
-    return this.errorMsgFormat({ message: errors }, 'validation', 400);
+    return this.errorMsgFormat({ message: errors }, 'validation', StatusCodes.BAD_REQUEST);
 }
 
 /*************************************
@@ -42,7 +44,7 @@ exports.validationFormat = (error) => {
 * @param { string }   message ( response message      )
 *
 ***************************************/
-exports.successFormat = (data, type = 'users', code = 200, message = '') => {
+exports.successFormat = (data, type = 'users', code = StatusCodes.OK, message = '') => {
     return {
         "code": code,
         "errors": false,

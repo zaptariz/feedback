@@ -35,7 +35,7 @@ router.get('/allfeedback', adminAuth, (req, res) => {
 
 })
 // router.get('/allfeedback',adminAuth,fee.allFeedback)
-router.get('/getrandomuser', (req, res) => {
+router.get('/getrandomuser',adminAuth, (req, res) => {
     try {
         return feedBackController.getRandomUsers(req, res)
     } catch (error) {
